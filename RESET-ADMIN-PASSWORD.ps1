@@ -174,19 +174,9 @@ if (-not [string]::Equals($password, $confirmation, [StringComparison]::Ordinal)
 }
 
 Write-Host "Securing and updating the account..." -ForegroundColor Cyan
-$nodeScript = @'
-const fs = require("fs");
-const bcrypt = require("bcryptjs");
-const password = fs.readFileSync(0, "utf8").replace(/\r?\n$/, "");
-if (password.length < 8) process.exit(2);
-process.stdout.write(bcrypt.hashSync(password, 12));
-'@
-$nodeScriptBase64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($nodeScript))
-$nodeBootstrap = 'eval(Buffer.from(process.argv[1],Buffer.from([98,97,115,101,54,52]).toString()).toString())'
-
 $previousErrorActionPreference = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
-$hashOutput = @($password | & docker compose exec -T $appService node -e $nodeBootstrap $nodeScriptBase64 2>&1)
+$hashOutput = @($password | & docker compose exec -T $appService node /app/reset-password-hash.cjs 2>&1)
 $hashExitCode = $LASTEXITCODE
 $ErrorActionPreference = $previousErrorActionPreference
 $password = $null
@@ -196,7 +186,8 @@ $secureConfirmation.Dispose()
 
 $passwordHash = $hashOutput | Where-Object { $_ -match '^\$2[abxy]\$\d{2}\$' } | Select-Object -Last 1
 if ($hashExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($passwordHash)) {
-    Stop-WithMessage "The application could not create a secure password hash. Make sure the latest app image is running."
+    $details = ($hashOutput | Select-Object -Last 4) -join [Environment]::NewLine
+    Stop-WithMessage "The application could not create a secure password hash.`n$details"
 }
 
 $safeEmail = $email.Replace("'", "''")

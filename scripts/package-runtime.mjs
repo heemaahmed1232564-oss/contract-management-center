@@ -18,6 +18,7 @@ await copy(join(projectRoot, "public"), join(runtimeRoot, "public"));
 await copy(join(projectRoot, "prisma", "migrations"), join(runtimeRoot, "prisma", "migrations"));
 await copy(join(projectRoot, "scripts", "runtime-migrate.mjs"), join(runtimeRoot, "migrate.mjs"));
 await copy(join(projectRoot, "scripts", "runtime-seed-admin.mjs"), join(runtimeRoot, "seed-admin.mjs"));
+await copy(join(projectRoot, "RESET-PASSWORD-HASH.cjs"), join(runtimeRoot, "reset-password-hash.cjs"));
 await copy(join(projectRoot, "node_modules", "bcryptjs"), join(runtimeRoot, "node_modules", "bcryptjs"));
 
 await writeFile(
