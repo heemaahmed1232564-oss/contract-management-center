@@ -58,15 +58,15 @@ if (-not $appService -or -not $databaseService) {
 }
 
 Write-Host "Starting the application database..." -ForegroundColor Cyan
-& docker compose up -d $databaseService $appService
+& docker compose up -d $databaseService
 if ($LASTEXITCODE -ne 0) {
-    Stop-WithMessage "Docker could not start the application. Run START-HERE.bat, then try again."
+    Stop-WithMessage "Docker could not start the application database. Open Docker Desktop, then try again."
 }
 
 $ready = $false
 for ($attempt = 1; $attempt -le 30; $attempt++) {
     $running = @(& docker compose ps --status running --services 2>$null)
-    if (($running -contains $databaseService) -and ($running -contains $appService)) {
+    if ($running -contains $databaseService) {
         $ready = $true
         break
     }
@@ -74,7 +74,7 @@ for ($attempt = 1; $attempt -le 30; $attempt++) {
 }
 
 if (-not $ready) {
-    Stop-WithMessage "The application containers did not become ready. Run START-HERE.bat and try again."
+    Stop-WithMessage "The application database did not become ready. Open Docker Desktop, then try again."
 }
 
 $databaseCommand = 'psql -U "${POSTGRES_USER:-contract_hub}" -d "${POSTGRES_DB:-contract_hub}" -v ON_ERROR_STOP=1'
@@ -176,7 +176,10 @@ if (-not [string]::Equals($password, $confirmation, [StringComparison]::Ordinal)
 Write-Host "Securing and updating the account..." -ForegroundColor Cyan
 $previousErrorActionPreference = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
-$hashOutput = @($password | & docker compose exec -T $appService node /app/reset-password-hash.cjs 2>&1)
+$hashOutput = @(
+    $password |
+        & docker compose run --rm --no-deps -T $appService node /app/reset-password-hash.cjs 2>&1
+)
 $hashExitCode = $LASTEXITCODE
 $ErrorActionPreference = $previousErrorActionPreference
 $password = $null
