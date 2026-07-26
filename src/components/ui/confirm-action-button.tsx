@@ -13,7 +13,7 @@ export function ConfirmActionButton({
   title,
   description,
   successMessage,
-  label = "حذف",
+  label,
 }: {
   action: (id: string) => Promise<void>;
   id: string;
@@ -26,7 +26,7 @@ export function ConfirmActionButton({
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   return <>
-    <Button type="button" size="sm" variant="danger" onClick={() => setOpen(true)}><Trash2 className="size-4" />{label}</Button>
+    <Button type="button" size="sm" variant="danger" onClick={() => setOpen(true)}><Trash2 className="size-4" />{label ?? tx(locale, "حذف", "Delete")}</Button>
     {open && <div className="modal-backdrop" role="presentation" onMouseDown={() => !pending && setOpen(false)}>
       <section className="modal-card" role="alertdialog" aria-modal="true" aria-labelledby={`confirm-${id}`} onMouseDown={(event) => event.stopPropagation()}>
         <button className="modal-close" type="button" onClick={() => setOpen(false)} aria-label={tx(locale, "إغلاق", "Close")}><X className="size-4" /></button>

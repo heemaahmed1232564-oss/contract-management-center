@@ -30,14 +30,14 @@ export function AppShell({ user, children, locale, theme }: { user: User; childr
         </div>
       </aside>
 
-      <div className="min-w-0">
+      <div className="app-workspace">
         <header className="app-topbar">
           <div className="flex min-w-0 items-center gap-3 lg:hidden">
             <details className="relative">
-              <summary className="grid size-11 cursor-pointer list-none place-items-center rounded-xl hover:bg-[var(--surface-muted)]" aria-label="فتح القائمة">
+              <summary className="grid size-11 cursor-pointer list-none place-items-center rounded-xl transition hover:bg-[var(--surface-muted)]" aria-label={tx(locale, "فتح القائمة", "Open menu")}>
                 <Menu className="size-5" />
               </summary>
-              <div className="absolute right-0 top-13 w-64 rounded-2xl border bg-[var(--surface)] p-3 shadow-2xl">
+              <div className="absolute start-0 top-13 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border bg-[var(--surface)] p-3 shadow-2xl">
                 <AppNav role={user.role} locale={locale} />
                 <div className="mt-3 border-t pt-3"><LogoutButton locale={locale} /></div>
               </div>

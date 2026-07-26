@@ -37,3 +37,13 @@
 ## Final result
 
 passed
+
+## V5 bilingual verification
+
+- The production runtime was rebuilt after the final interface changes.
+- Direct Arabic and English requests return the correct document semantics:
+  `lang="ar" dir="rtl"` and `lang="en" dir="ltr"`.
+- Locale-aware company names, dates, currencies, statuses, API messages, controls,
+  focus states, file inputs, tables, dialogs, and mobile navigation were reviewed.
+- The existing selected visual direction remains unchanged; V5 improves bilingual
+  consistency and accessibility without replacing the approved identity.

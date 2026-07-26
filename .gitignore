@@ -18,6 +18,8 @@
 /out/
 /runtime/
 /dist/
+/dist-v5/
+/Contract-Management-Center-V*.zip
 
 # production
 /build

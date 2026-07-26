@@ -5,8 +5,10 @@ import { requireRole } from "@/lib/auth/permissions";
 import { generateContractCopy } from "@/lib/contracts/copy-orchestrator";
 import { getGoogleDriveService } from "@/lib/drive";
 import { prisma } from "@/lib/prisma";
+import { getLocale } from "@/lib/i18n-server";
 
 export async function POST(request: Request) {
+  const locale = await getLocale();
   try {
     const user = await requireRole([UserRole.ADMIN]);
     const { templateId } = (await request.json()) as { templateId?: string };
@@ -32,6 +34,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, url: file.webViewLink });
   } catch (error) {
     const status = error instanceof AppError ? error.status : 500;
-    return NextResponse.json({ ok: false, message: userMessage(error) }, { status });
+    return NextResponse.json({ ok: false, message: userMessage(error, locale) }, { status });
   }
 }

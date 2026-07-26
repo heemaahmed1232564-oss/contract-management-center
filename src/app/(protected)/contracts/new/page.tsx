@@ -1,10 +1,10 @@
 import { ContractCreateForm, type TemplateOption } from "@/components/contracts/contract-create-form";
 import { getCurrentUser } from "@/lib/auth/permissions";
 import { prisma } from "@/lib/prisma";
-import { tx } from "@/lib/i18n";
+import { localizedName, tx } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 
-export const metadata = { title: "إنشاء عقد" };
+export const metadata = { title: "إنشاء عقد | Create contract" };
 
 export default async function NewContractPage() {
   await getCurrentUser();
@@ -25,7 +25,7 @@ export default async function NewContractPage() {
   const templates: TemplateOption[] = records.map((record) => ({
     id: record.id,
     agencyId: record.agencyId,
-    agencyName: record.agency.nameAr || record.agency.name,
+    agencyName: localizedName(locale, record.agency),
     agencyCode: record.agency.code,
     packageId: record.packageId,
     packageName: record.package.name,

@@ -46,11 +46,11 @@ jobs:
             --exclude coverage
           cp -a runtime dist/Contract-Management-Center/runtime
           cd dist
-          zip -qr Contract-Management-Center-v0.6.0.zip Contract-Management-Center
+          zip -qr Contract-Management-Center-V5.zip Contract-Management-Center
 
       - name: Upload verified release
         uses: actions/upload-artifact@v4
         with:
-          name: Contract-Management-Center-v0.6.0
-          path: dist/Contract-Management-Center-v0.6.0.zip
+          name: Contract-Management-Center-V5
+          path: dist/Contract-Management-Center-V5.zip
           if-no-files-found: error

@@ -5,10 +5,13 @@ import { getCurrentUser } from "@/lib/auth/permissions";
 import { createGeneratedContract } from "@/lib/contracts/generation-service";
 import { logger } from "@/lib/logger";
 import { generateContractSchema } from "@/lib/validation/contracts";
+import { localizedName } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const locale = await getLocale();
   try {
     const user = await getCurrentUser();
     const input = generateContractSchema.parse(await request.json());
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
         originalTemplateVersion: contract.originalTemplateVersion,
         copiedFileName: contract.copiedFileName,
         copiedGoogleFileUrl: contract.copiedGoogleFileUrl,
-        agencyName: contract.agency.nameAr || contract.agency.name,
+        agencyName: localizedName(locale, contract.agency),
         packageName: contract.package.name,
         employeeName: contract.createdBy.name,
         status: contract.status,
@@ -64,7 +67,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         code: appError?.code ?? "INTERNAL_ERROR",
-        message: userMessage(error),
+        message: userMessage(error, locale),
         details: appError?.code === "DUPLICATE_WARNING" ? appError.details : undefined,
       },
       { status: appError?.status ?? 500 },

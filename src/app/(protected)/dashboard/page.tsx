@@ -5,10 +5,10 @@ import { getCurrentUser } from "@/lib/auth/permissions";
 import { contractScope } from "@/lib/auth/scopes";
 import { prisma } from "@/lib/prisma";
 import { formatDateTime, startOfMonth, startOfToday, startOfWeek } from "@/lib/utils";
-import { tx } from "@/lib/i18n";
+import { localizedName, tx } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 
-export const metadata = { title: "لوحة المتابعة" };
+export const metadata = { title: "لوحة المتابعة | Dashboard" };
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="إحصاءات العقود">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label={tx(locale, "إحصاءات العقود", "Contract statistics")}>
         {cards.map((card) => (
           <article key={card.label} className="card flex items-center gap-4 p-5">
             <span className={`grid size-12 place-items-center rounded-2xl ${card.color}`}><card.icon className="size-5" /></span>
@@ -67,9 +67,9 @@ export default async function DashboardPage() {
           <div className="table-wrap"><table className="data-table"><thead><tr><th>{tx(locale, "المرجع", "Reference")}</th><th>{tx(locale, "الشركة والباقة", "Company & package")}</th><th>{tx(locale, "العميل", "Client")}</th><th>{tx(locale, "الموظف", "Employee")}</th><th>{tx(locale, "الحالة", "Status")}</th><th>{tx(locale, "التاريخ", "Date")}</th><th></th></tr></thead><tbody>
             {recent.map((contract) => <tr key={contract.id}>
               <td className="font-bold" dir="ltr">{contract.referenceNumber}</td>
-              <td><p className="font-bold">{contract.agency.nameAr || contract.agency.name}</p><p className="text-xs text-[var(--muted)]">{contract.package.name}</p></td>
+              <td><p className="font-bold">{localizedName(locale, contract.agency)}</p><p className="text-xs text-[var(--muted)]">{contract.package.name}</p></td>
               <td>{contract.clientName || "—"}</td><td>{contract.createdBy.name}</td>
-              <td><ContractStatusBadge status={contract.status} locale={locale} /></td><td className="whitespace-nowrap text-xs text-[var(--muted)]">{formatDateTime(contract.createdAt)}</td>
+              <td><ContractStatusBadge status={contract.status} locale={locale} /></td><td className="whitespace-nowrap text-xs text-[var(--muted)]">{formatDateTime(contract.createdAt, locale)}</td>
               <td>{contract.copiedGoogleFileUrl && <Link className="font-bold text-[var(--primary)]" href={`/api/contracts/${contract.id}/open`} target="_blank">{tx(locale, "فتح", "Open")}</Link>}</td>
             </tr>)}
           </tbody></table></div>

@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { tx } from "@/lib/i18n";
 import { getLocale, getTheme } from "@/lib/i18n-server";
 
-export const metadata = { title: "تسجيل الدخول" };
+export const metadata = { title: "تسجيل الدخول | Sign in" };
 
 export default async function LoginPage() {
   const session = await auth();

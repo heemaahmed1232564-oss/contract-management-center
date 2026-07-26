@@ -14,7 +14,7 @@ import { ResetLinkButton } from "@/components/admin/reset-link-button";
 import { roleLabel, tx, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 
-export const metadata = { title: "إدارة المستخدمين" };
+export const metadata = { title: "إدارة المستخدمين | User management" };
 export default async function UsersPage() {
   const current = await getCurrentUser(); if (current.role !== UserRole.ADMIN) redirect("/admin");
   const locale = await getLocale();

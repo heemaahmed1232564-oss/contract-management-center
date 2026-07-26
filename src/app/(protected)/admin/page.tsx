@@ -21,7 +21,7 @@ import { ActionForm } from "@/components/ui/action-form";
 import { tx } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 
-export const metadata = { title: "الإدارة" };
+export const metadata = { title: "لوحة الإدارة | Admin overview" };
 
 export default async function AdminPage({
   searchParams,
@@ -59,7 +59,7 @@ export default async function AdminPage({
         : tx(locale, "Google Drive غير متصل", "Google Drive disconnected")
       : driveMode === "service_account"
         ? tx(locale, "Google Drive فعلي", "Live Google Drive")
-        : "Development Mock Mode";
+        : tx(locale, "وضع التطوير التجريبي", "Development mock mode");
   return <div className="space-y-7">
     <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="mb-1 text-sm font-bold text-[var(--primary)]">{tx(locale, "تحكم وتشغيل", "Control and operations")}</p><h1 className="text-2xl font-black md:text-3xl">{tx(locale, "لوحة الإدارة", "Admin overview")}</h1><p className="mt-2 text-sm text-[var(--muted)]">{tx(locale, "إدارة المصادر ومراقبة رحلة إنشاء وتوثيق العقد.", "Manage sources and monitor contract creation and certification.")}</p></div><Badge tone={driveLive ? "success" : "warning"}>{driveLabel}</Badge></div>
     {query.drive === "connected" && <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"><CheckCircle2 className="size-5" /><p className="text-sm font-bold">{tx(locale, "تم ربط Google Drive بنجاح.", "Google Drive connected successfully.")}</p></div>}
@@ -85,7 +85,7 @@ export default async function AdminPage({
       {!oauthConfigured && <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">{tx(locale, "شغّل ملف CONNECT-GOOGLE.bat أولًا لإضافة بيانات Google OAuth بأمان.", "Run CONNECT-GOOGLE.bat first to add Google OAuth credentials securely.")}</div>}
     </section>}
     {user.role === UserRole.ADMIN && <section className="card p-5 md:p-7"><div className="mb-6 flex items-center gap-3"><Settings2 className="size-5 text-[var(--primary)]" /><div><h2 className="font-black">{tx(locale, "إعدادات النظام", "System settings")}</h2><p className="mt-1 text-xs text-[var(--muted)]">{tx(locale, "قواعد الاسم والرقم المرجعي وShared Drive.", "File naming, reference numbering, and Shared Drive settings.")}</p></div></div><ActionForm action={updateSystemSettingsAction} successMessage={tx(locale, "تم حفظ الإعدادات بنجاح.", "Settings saved successfully.")} className="grid gap-5 md:grid-cols-2">
-      <label className="md:col-span-2"><span className="label">{tx(locale, "نمط اسم الملف", "File naming pattern")}</span><input className="field" name="namingPattern" defaultValue={setting?.namingPattern} required dir="ltr" /><span className="mt-2 block text-xs text-[var(--muted)]">Tokens: {'{reference_number} {agency_code} {package_code} {client_name} {employee_name} {date}'}</span></label>
+      <label className="md:col-span-2"><span className="label">{tx(locale, "نمط اسم الملف", "File naming pattern")}</span><input className="field" name="namingPattern" defaultValue={setting?.namingPattern} required dir="ltr" /><span className="mt-2 block text-xs text-[var(--muted)]">{tx(locale, "المتغيرات", "Tokens")}: <bdi dir="ltr">{'{reference_number} {agency_code} {package_code} {client_name} {employee_name} {date}'}</bdi></span></label>
       <label><span className="label">{tx(locale, "بادئة الرقم المرجعي", "Reference prefix")}</span><input className="field" name="referencePrefix" defaultValue={setting?.referencePrefix || "CTR"} required dir="ltr" /></label>
       <label><span className="label">Google Drive Root Folder ID</span><input className="field" name="googleDriveRootFolderId" defaultValue={setting?.googleDriveRootFolderId || ""} dir="ltr" /></label>
       <label><span className="label">Shared Drive ID</span><input className="field" name="sharedDriveId" defaultValue={setting?.sharedDriveId || ""} dir="ltr" /></label>

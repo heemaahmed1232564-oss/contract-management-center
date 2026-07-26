@@ -5,6 +5,17 @@ export function tx(locale: Locale, ar: string, en: string) {
   return locale === "ar" ? ar : en;
 }
 
+export function localeTag(locale: Locale) {
+  return locale === "ar" ? "ar-EG" : "en-US";
+}
+
+export function localizedName(
+  locale: Locale,
+  value: { name: string; nameAr?: string | null },
+) {
+  return locale === "ar" ? value.nameAr?.trim() || value.name : value.name;
+}
+
 export function roleLabel(locale: Locale, role: "ADMIN" | "SUPERVISOR" | "CONTRACT_EMPLOYEE") {
   const labels = {
     ADMIN: ["مسؤول النظام", "System Administrator"],

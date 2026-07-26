@@ -16,6 +16,10 @@ const labels: Record<ContractStatus, [string, string]> = {
   ARCHIVED: ["مؤرشف", "Archived"],
 };
 
+export function contractStatusLabel(status: ContractStatus, locale: Locale = "ar") {
+  return tx(locale, labels[status][0], labels[status][1]);
+}
+
 export function ContractStatusBadge({ status, locale = "ar" }: { status: ContractStatus; locale?: Locale }) {
   const tone =
     status === "FAILED" || status === "CANCELLED"
@@ -25,5 +29,5 @@ export function ContractStatusBadge({ status, locale = "ar" }: { status: Contrac
         : status === "CREATED" || status === "OPENED" || status === "COMPLETED" || status === "CERTIFIED" || status === "SENT"
           ? "success"
           : "neutral";
-  return <Badge tone={tone}>{tx(locale, labels[status][0], labels[status][1])}</Badge>;
+  return <Badge tone={tone}>{contractStatusLabel(status, locale)}</Badge>;
 }
