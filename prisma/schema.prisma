@@ -1,0 +1,274 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  SUPERVISOR
+  CONTRACT_EMPLOYEE
+}
+
+enum ContractStatus {
+  CREATING
+  CREATED
+  OPENED
+  COMPLETED
+  PDF_EXPORTED
+  CERTIFIED
+  SENT
+  FAILED
+  CANCELLED
+  ARCHIVED
+}
+
+enum TemplateHealthStatus {
+  UNKNOWN
+  HEALTHY
+  INACCESSIBLE
+  MISSING
+  INVALID
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  passwordHash   String?   @map("password_hash")
+  role           UserRole  @default(CONTRACT_EMPLOYEE)
+  googleFolderId String?   @map("google_folder_id")
+  managerId      String?   @map("manager_id")
+  manager        User?     @relation("UserManager", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports  User[]    @relation("UserManager")
+  department     String?
+  isActive       Boolean   @default(true) @map("is_active")
+  sessionVersion Int       @default(0) @map("session_version")
+  lastLoginAt    DateTime? @map("last_login_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  generatedContracts GeneratedContract[] @relation("ContractCreator")
+  certifiedContracts GeneratedContract[] @relation("ContractCertifier")
+  passwordResetTokens PasswordResetToken[]
+  auditLogs          AuditLog[]
+  favorites          Favorite[]
+
+  @@index([managerId])
+  @@map("users")
+}
+
+model Agency {
+  id                  String    @id @default(cuid())
+  name                String
+  nameAr              String?   @map("name_ar")
+  code                String    @unique
+  googleDriveFolderId String?   @map("google_drive_folder_id")
+  brandingNotes       String?   @map("branding_notes")
+  stampImage          Bytes?    @map("stamp_image") @db.ByteA
+  stampImageMime      String?   @map("stamp_image_mime")
+  signatureImage      Bytes?    @map("signature_image") @db.ByteA
+  signatureImageMime  String?   @map("signature_image_mime")
+  certificationAlignment       String @default("RIGHT") @map("certification_alignment")
+  certificationLayout          String @default("SIGNATURE_RIGHT_STAMP_LEFT") @map("certification_layout")
+  certificationGapAfterTablePt Int    @default(12) @map("certification_gap_after_table_pt")
+  certificationHorizontalOffsetPt Int @default(18) @map("certification_horizontal_offset_pt")
+  certificationItemGapPt       Int    @default(12) @map("certification_item_gap_pt")
+  certificationSignatureWidthPt Int   @default(150) @map("certification_signature_width_pt")
+  certificationStampWidthPt     Int   @default(115) @map("certification_stamp_width_pt")
+  isActive            Boolean   @default(true) @map("is_active")
+  archivedAt          DateTime? @map("archived_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  templates          ContractTemplate[]
+  generatedContracts GeneratedContract[]
+  favorites          Favorite[]
+
+  @@index([isActive])
+  @@map("agencies")
+}
+
+model Package {
+  id              String    @id @default(cuid())
+  name            String
+  code            String    @unique
+  category        String
+  description     String?
+  defaultDuration Int?      @map("default_duration")
+  defaultPrice    Decimal?  @map("default_price") @db.Decimal(14, 2)
+  currency        String    @default("SAR")
+  isActive        Boolean   @default(true) @map("is_active")
+  archivedAt      DateTime? @map("archived_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  templates          ContractTemplate[]
+  generatedContracts GeneratedContract[]
+  favorites          Favorite[]
+
+  @@index([isActive])
+  @@map("packages")
+}
+
+model ContractTemplate {
+  id                  String               @id @default(cuid())
+  agencyId            String               @map("agency_id")
+  packageId           String               @map("package_id")
+  agency              Agency               @relation(fields: [agencyId], references: [id], onDelete: Restrict)
+  package             Package              @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  templateName        String               @map("template_name")
+  templateCode        String               @map("template_code")
+  contractType        String               @default("Standard") @map("contract_type")
+  googleFileId        String               @map("google_file_id")
+  googleFileUrl       String?              @map("google_file_url")
+  duration            Int?
+  price               Decimal?             @db.Decimal(14, 2)
+  currency            String               @default("SAR")
+  offerCode           String?              @map("offer_code")
+  version             String               @default("1.0")
+  effectiveFrom       DateTime             @map("effective_from")
+  effectiveTo         DateTime?            @map("effective_to")
+  isActive            Boolean              @default(true) @map("is_active")
+  notes               String?
+  healthStatus        TemplateHealthStatus @default(UNKNOWN) @map("health_status")
+  healthError         String?              @map("health_error")
+  lastHealthCheckedAt DateTime?            @map("last_health_checked_at")
+  archivedAt          DateTime?            @map("archived_at")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+
+  generatedContracts GeneratedContract[]
+
+  @@unique([agencyId, templateCode, version])
+  @@index([agencyId, packageId, isActive])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("contract_templates")
+}
+
+model GeneratedContract {
+  id                      String           @id @default(cuid())
+  referenceNumber         String           @unique @map("reference_number")
+  idempotencyKey          String           @unique @map("idempotency_key")
+  requestId               String           @unique @map("request_id")
+  originalTemplateId      String           @map("original_template_id")
+  originalTemplate        ContractTemplate @relation(fields: [originalTemplateId], references: [id], onDelete: Restrict)
+  originalTemplateName    String           @map("original_template_name")
+  originalTemplateVersion String           @map("original_template_version")
+  originalGoogleFileId    String           @map("original_google_file_id")
+  copiedGoogleFileId      String?          @map("copied_google_file_id")
+  copiedGoogleFileUrl     String?          @map("copied_google_file_url")
+  copiedFileName          String           @map("copied_file_name")
+  certifiedPdfFileId      String?          @map("certified_pdf_file_id")
+  certifiedPdfFileUrl     String?          @map("certified_pdf_file_url")
+  certifiedPdfFileName    String?          @map("certified_pdf_file_name")
+  certifiedPdfSha256      String?          @map("certified_pdf_sha256")
+  agencyId                String           @map("agency_id")
+  agency                  Agency           @relation(fields: [agencyId], references: [id], onDelete: Restrict)
+  packageId               String           @map("package_id")
+  package                 Package          @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  contractType            String           @map("contract_type")
+  duration                Int?
+  price                   Decimal?         @db.Decimal(14, 2)
+  currency                String
+  offerCode               String?          @map("offer_code")
+  clientName              String?          @map("client_name")
+  clientPhone             String?          @map("client_phone")
+  clientEmail             String?          @map("client_email")
+  notes                   String?
+  createdById             String           @map("created_by")
+  createdBy               User             @relation("ContractCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  certifiedById           String?          @map("certified_by")
+  certifiedBy             User?            @relation("ContractCertifier", fields: [certifiedById], references: [id], onDelete: SetNull)
+  employeeFolderId        String           @map("employee_folder_id")
+  status                  ContractStatus   @default(CREATING)
+  errorCode               String?          @map("error_code")
+  errorMessage            String?          @map("error_message")
+  googleErrorDetails      Json?            @map("google_error_details")
+  openedAt                DateTime?        @map("opened_at")
+  completedAt             DateTime?        @map("completed_at")
+  certifiedAt             DateTime?        @map("certified_at")
+  archivedAt              DateTime?        @map("archived_at")
+  createdAt               DateTime         @default(now()) @map("created_at")
+  updatedAt               DateTime         @updatedAt @map("updated_at")
+
+  @@index([createdById, createdAt])
+  @@index([agencyId, packageId, createdAt])
+  @@index([status, createdAt])
+  @@index([certifiedById, certifiedAt])
+  @@index([clientName])
+  @@map("generated_contracts")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?  @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  details    Json?
+  ipAddress  String?  @map("ip_address")
+  requestId  String?  @map("request_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id                                    String    @id @default("default")
+  googleDriveRootFolderId               String?   @map("google_drive_root_folder_id")
+  sharedDriveId                         String?   @map("shared_drive_id")
+  googleDriveOAuthRefreshTokenEncrypted String?   @map("google_drive_oauth_refresh_token_encrypted")
+  googleDriveOAuthEmail                 String?   @map("google_drive_oauth_email")
+  googleDriveOAuthConnectedAt           DateTime? @map("google_drive_oauth_connected_at")
+  namingPattern                         String    @default("{reference_number} - {agency_code} - {package_code} - {client_name} - {employee_name} - {date}") @map("naming_pattern")
+  referencePrefix                       String    @default("CTR") @map("reference_prefix")
+  newFilePermission                     String    @default("INHERIT_FROM_FOLDER") @map("new_file_permission")
+  retentionDays                         Int       @default(2555) @map("retention_days")
+  createdAt                             DateTime  @default(now()) @map("created_at")
+  updatedAt                             DateTime  @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId, expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model ReferenceCounter {
+  year      Int      @id
+  value     Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("reference_counters")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  agencyId  String   @map("agency_id")
+  packageId String   @map("package_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  package   Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, agencyId, packageId])
+  @@map("favorites")
+}

@@ -1,0 +1,52 @@
+name: Verify and package
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Verify and build the prebuilt runtime
+        run: npm run release:check
+
+      - name: Assemble Windows release
+        shell: bash
+        run: |
+          mkdir -p dist/Contract-Management-Center
+          rsync -a ./ dist/Contract-Management-Center/ \
+            --exclude .git \
+            --exclude .next \
+            --exclude node_modules \
+            --exclude runtime \
+            --exclude dist \
+            --exclude coverage
+          cp -a runtime dist/Contract-Management-Center/runtime
+          cd dist
+          zip -qr Contract-Management-Center-v0.6.0.zip Contract-Management-Center
+
+      - name: Upload verified release
+        uses: actions/upload-artifact@v4
+        with:
+          name: Contract-Management-Center-v0.6.0
+          path: dist/Contract-Management-Center-v0.6.0.zip
+          if-no-files-found: error
