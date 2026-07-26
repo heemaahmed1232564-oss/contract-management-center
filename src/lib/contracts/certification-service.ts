@@ -1,4 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 import { PDFDocument, rgb, type PDFImage, type PDFPage } from "pdf-lib";
 import { ContractStatus, UserRole } from "@/generated/prisma/enums";
 import { AppError, errorMessages } from "@/lib/api-error";
@@ -38,6 +40,12 @@ type ImagePlacement = {
   height: number;
 };
 
+function pdfJsAssetUrl(folder: "cmaps" | "standard_fonts" | "wasm") {
+  const require = createRequire(import.meta.url);
+  const packageRoot = dirname(require.resolve("pdfjs-dist/package.json"));
+  return `${join(packageRoot, folder)}/`;
+}
+
 function imageSize(image: PDFImage, requestedWidth: number) {
   let width = requestedWidth;
   let height = width * (image.height / image.width);
@@ -58,7 +66,13 @@ async function locateAnchor(pdfBytes: Buffer, anchorText: string): Promise<PdfAn
     ]);
     const runtime = globalThis as typeof globalThis & { pdfjsWorker?: typeof pdfjsWorker };
     runtime.pdfjsWorker = pdfjsWorker;
-    const task = pdfjs.getDocument({ data: new Uint8Array(pdfBytes) });
+    const task = pdfjs.getDocument({
+      data: new Uint8Array(pdfBytes),
+      cMapUrl: pdfJsAssetUrl("cmaps"),
+      cMapPacked: true,
+      standardFontDataUrl: pdfJsAssetUrl("standard_fonts"),
+      wasmUrl: pdfJsAssetUrl("wasm"),
+    });
     const document = await task.promise;
     try {
       for (let pageIndex = 0; pageIndex < document.numPages; pageIndex += 1) {

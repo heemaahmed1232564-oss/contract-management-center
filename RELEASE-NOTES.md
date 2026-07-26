@@ -1,5 +1,11 @@
 # Contract Management Center V5
 
+## PDF certification runtime hotfix
+
+- Ships the PDF.js runtime, worker, and Linux Canvas adapter used by Docker.
+- Keeps PDF.js external to the Next.js server bundle so its dynamic worker import is preserved.
+- Packaging now performs a real anchor-location smoke test against the prepared runtime.
+
 ## واجهة عربية وإنجليزية مصقولة
 
 - اتجاه RTL للعربية وLTR للإنجليزية على مستوى الصفحة والتنقل والنماذج.
