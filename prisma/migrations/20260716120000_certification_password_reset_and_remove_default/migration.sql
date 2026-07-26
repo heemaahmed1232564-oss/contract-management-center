@@ -31,8 +31,21 @@ ADD COLUMN IF NOT EXISTS "certified_pdf_sha256" TEXT,
 ADD COLUMN IF NOT EXISTS "certified_by" TEXT,
 ADD COLUMN IF NOT EXISTS "certified_at" TIMESTAMP(3);
 
-ALTER TABLE "generated_contracts"
-ADD CONSTRAINT "generated_contracts_certified_by_fkey" FOREIGN KEY ("certified_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $migration$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'generated_contracts_certified_by_fkey'
+      AND conrelid = to_regclass('public.generated_contracts')
+  ) THEN
+    ALTER TABLE "generated_contracts"
+    ADD CONSTRAINT "generated_contracts_certified_by_fkey"
+    FOREIGN KEY ("certified_by") REFERENCES "users"("id")
+    ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END
+$migration$;
 
 CREATE INDEX IF NOT EXISTS "generated_contracts_certified_by_certified_at_idx" ON "generated_contracts"("certified_by", "certified_at");
 
